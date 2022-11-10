@@ -1,0 +1,21 @@
+Среда MS VS Code:
+Запуск служб mysql и apache2:
+'sudo service mysql start
+sudo service apache2 start'
+==========================
+структура таблицы БД 'rors':
+'id
+name
+pred
+dept
+position
+rors5
+rors10
+description'
+===========================
+strapi
+'
+http://localhost:1337/admin/
+v.myachin@   Manager3
+'
+npm run strapi routes:list

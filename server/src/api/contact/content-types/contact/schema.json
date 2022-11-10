@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contacts",
+  "info": {
+    "singularName": "contact",
+    "pluralName": "contacts",
+    "displayName": "contact",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "pluginOptions": {},
+      "type": "string",
+      "required": true,
+      "unique": false
+    },
+    "rors5": {
+      "pluginOptions": {},
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "pluginOptions": {},
+      "type": "string"
+    },
+    "rors10": {
+      "pluginOptions": {},
+      "type": "string"
+    },
+    "position": {
+      "pluginOptions": {},
+      "type": "string",
+      "required": true
+    },
+    "pred": {
+      "pluginOptions": {},
+      "type": "string",
+      "required": true
+    },
+    "dept": {
+      "pluginOptions": {},
+      "type": "string"
+    }
+  }
+}
