@@ -16,6 +16,7 @@
           {{ key }}
         </button>
         <button
+          v-if="uniqueDepts"
           class="btn"
           :class="[isAllDeptsSelected() ? 'btn-pressed' : 'btn-white']"
           @click="toggleVisibleAll"
@@ -43,7 +44,7 @@
             class="border-b"
             :class="contact.numInDept == 1 ? 'border-t-4' : ''"
             :key="key"
-            @click="openDialog"
+            @click="openContactModal"
             :data-id="contact.id"
           >
             <td class="text-center">{{ contact.numInDept }}</td>
@@ -134,13 +135,22 @@ export default {
       }
       return true
     },
-    openDialog() {
+    openContactModal(e) {
+      const id = e.target.closest('tr').dataset.id
+      const currContact = this.contacts.find((contact) => contact.id == id)
       this.$dialog.open({
-        message: 'Are you sure you want to do this?',
+        contact: currContact,
         resolver: async (result) => {
           try {
-            const res = await result
-            /* eslint-disable no-console */
+            const rr = await result
+            console.log('rr: ', rr)
+
+            // запрос к api для сохранения изменений
+            const response = await fetch(
+              'http://localhost:1337/api/contacts'
+              // { method: 'POST' }
+            )
+            const res = await response.json()
             console.log(res)
           } catch (error) {
             console.warn(error)
@@ -159,7 +169,6 @@ export default {
 
     this.initUniqueDepts()
     this.makeVisibleContacts()
-    console.log('mounted main')
   },
 }
 </script>

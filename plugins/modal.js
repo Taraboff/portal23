@@ -1,5 +1,5 @@
 export default (context, inject) => {
-  const dialog = {
+  const toggleContactsModal = {
     open: (options) => {
       window.$nuxt.$emit('dialog', { ...options, open: true })
     },
@@ -7,5 +7,5 @@ export default (context, inject) => {
       window.$nuxt.$emit('dialog', { ...options, open: false })
     },
   }
-  inject('dialog', dialog)
+  inject('dialog', toggleContactsModal)
 }

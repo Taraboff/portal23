@@ -1,6 +1,6 @@
 <template>
   <div>
-    <DialogModal />
+    <ContactModal />
     <Header />
     <div class="lg:container mx-auto">
       <div>
@@ -11,11 +11,11 @@
 </template>
 
 <script>
-import DialogModal from '~/components/modals/DialogModal.vue'
+import ContactModal from '~/components/modals/ContactModal.vue'
 import Header from '~/components/Header.vue'
 export default {
   components: {
-    DialogModal,
+    ContactModal,
     Header,
   },
 }

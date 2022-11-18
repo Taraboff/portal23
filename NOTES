@@ -19,3 +19,6 @@ http://localhost:1337/admin/
 v.myachin@   Manager3
 '
 npm run strapi routes:list
+
+npm install -D @tailwindcss/forms
+
