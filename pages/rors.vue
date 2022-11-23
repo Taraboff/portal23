@@ -23,9 +23,12 @@
         >
           Все
         </button>
+        <button v-if="isAdmin" @click="createContactModal" class="btn btn-new">
+          Создать
+        </button>
       </div>
     </div>
-    <div class="w-3/4 mx-auto">
+    <div v-if="visibleContacts.length" class="w-3/4 mx-auto">
       <table class="min-w-full border text-center">
         <thead class="bg-white border-b">
           <tr class="text-sm font-medium text-gray-900 px-6 py-4 text-center">
@@ -44,7 +47,7 @@
             class="border-b"
             :class="contact.numInDept == 1 ? 'border-t-4' : ''"
             :key="key"
-            @click="openContactModal"
+            @click="editContactModal"
             :data-id="contact.id"
           >
             <td class="text-center">{{ contact.numInDept }}</td>
@@ -67,6 +70,7 @@ export default {
     contacts: [],
     uniqueDepts: {},
     visibleContacts: [],
+    isAdmin: true,
   }),
   methods: {
     initUniqueDepts() {
@@ -135,20 +139,21 @@ export default {
       }
       return true
     },
-    openContactModal(e) {
+    editContactModal(e) {
       const id = e.target.closest('tr').dataset.id
       const currContact = this.contacts.find((contact) => contact.id == id)
+
       this.$dialog.open({
         contact: currContact,
         resolver: async (result) => {
           try {
-            const rr = await result
-            console.log('rr: ', rr)
+            const fields = await result // в fields возвращается объект данных из полей формы
+            const contact = {}
+            contact.data = fields.attributes
 
-            // запрос к api для сохранения изменений
             const response = await fetch(
-              'http://localhost:1337/api/contacts'
-              // { method: 'POST' }
+              `http://localhost:1337/api/contacts/${fields.id}`,
+              { method: 'PUT', body: JSON.stringify(contact) }
             )
             const res = await response.json()
             console.log(res)
@@ -158,17 +163,53 @@ export default {
         },
       })
     },
+    createContactModal() {
+      this.$dialog.open({
+        contact: {
+          attributes: {
+            name: '',
+            position: '',
+            rors5: '',
+            rors10: '',
+            pred: '',
+            dept: '',
+            description: '',
+          },
+        },
+        resolver: async (result) => {
+          try {
+            const fields = await result // в fields возвращается объект данных из полей формы
+            const contact = {}
+            contact.data = fields.attributes
+
+            const response = await fetch(`http://localhost:1337/api/contacts`, {
+              method: 'POST',
+              mode: 'no-cors',
+              body: JSON.stringify(contact),
+            })
+            // const res = await response.json()
+            // console.log(res)
+          } catch (error) {
+            console.warn(error)
+          }
+          this.fetchContacts()
+        },
+      })
+    },
+    async fetchContacts() {
+      const response = await fetch(
+        'http://localhost:1337/api/contacts?sort[0]=dept&sort[1]=name'
+      )
+      const result = await response.json()
+      this.contacts = result.data
+
+      this.initUniqueDepts()
+      this.makeVisibleContacts()
+    },
   },
 
-  async mounted() {
-    const response = await fetch(
-      'http://localhost:1337/api/contacts?sort[0]=dept&sort[1]=name'
-    )
-    const result = await response.json()
-    this.contacts = result.data
-
-    this.initUniqueDepts()
-    this.makeVisibleContacts()
+  mounted() {
+    this.fetchContacts()
   },
 }
 </script>
@@ -181,6 +222,9 @@ export default {
 }
 .btn-pressed {
   @apply bg-indigo-600 hover:bg-indigo-700 border-transparent border text-white;
+}
+.btn-new {
+  @apply text-green-500 bg-transparent border border-green-500 hover:bg-green-500 hover:text-white;
 }
 td {
   cursor: pointer;

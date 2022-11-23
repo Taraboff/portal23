@@ -8,8 +8,8 @@
           <h3 class="text-lg font-medium leading-6 text-gray-900">
             Редактирование контакта РОРС
           </h3>
-          <p class="mt-1 text-sm text-gray-600">
-            Внесите изменения и сохраните
+          <p class="mt-1 px-2 text-sm text-gray-500" :class="[msgClass]">
+            {{ message }}
           </p>
         </div>
 
@@ -28,6 +28,7 @@
                   id="name"
                   class="p-2 mt-2 block w-full rounded-md border-gray-300 shadow-sm hover:outline-slate-100 focus:outline-slate-100 focus:ring-indigo-500 sm:text-sm"
                   :value="contact ? contact.attributes.name : ''"
+                  @input="contact.attributes.name = $event.target.value"
                 />
               </div>
 
@@ -44,6 +45,7 @@
                   autocomplete="on"
                   class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   :value="contact ? contact.attributes.position : ''"
+                  @input="contact.attributes.position = $event.target.value"
                 />
               </div>
               <div class="col-span-3">
@@ -59,6 +61,7 @@
                   autocomplete="on"
                   class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   :value="contact ? contact.attributes.pred : ''"
+                  @input="contact.attributes.pred = $event.target.value"
                 />
               </div>
 
@@ -75,6 +78,7 @@
                   autocomplete="on"
                   class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   :value="contact ? contact.attributes.dept : ''"
+                  @input="contact.attributes.dept = $event.target.value"
                 />
               </div>
               <div class="col-span-3">
@@ -89,6 +93,7 @@
                   id="rors5"
                   class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   :value="contact ? contact.attributes.rors5 : ''"
+                  @input="contact.attributes.rors5 = $event.target.value"
                 />
               </div>
 
@@ -104,22 +109,23 @@
                   id="rors10"
                   class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   :value="contact ? contact.attributes.rors10 : ''"
+                  @input="contact.attributes.rors10 = $event.target.value"
                 />
               </div>
 
               <div class="col-span-6 lg:col-span-6">
                 <label
-                  for="city"
+                  for="description"
                   class="block text-sm font-medium text-gray-700"
                   >Примечание</label
                 >
                 <input
                   type="text"
-                  name="city"
-                  id="city"
-                  autocomplete="address-level2"
+                  name="description"
+                  id="description"
                   class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  :v-model="contact ? contact.attributes.description : ''"
+                  :value="contact ? contact.attributes.description : ''"
+                  @input="contact.attributes.description = $event.target.value"
                 />
               </div>
             </div>
@@ -150,6 +156,8 @@ export default {
     return {
       open: false,
       contact: '',
+      message: 'Внесите изменения и сохраните',
+      msgClass: '',
       resolver: () => null,
     }
   },
@@ -160,21 +168,34 @@ export default {
     save() {
       this.resolver(
         new Promise((resolve) => {
-          console.log('this.contact: ', this.contact)
           resolve(this.contact)
         })
       )
-      this.close()
+      this.close(true)
     },
     cancel() {
       this.resolver(
         new Promise((resolve, reject) => reject(new Error('cancelled')))
       )
-      this.close()
+      this.close(false)
       // this.$dialog.close()
     },
-    close() {
-      this.open = false
+    close(isSaved) {
+      this.messageOutput(isSaved)
+    },
+    messageOutput(isSaved) {
+      // Вывод сообщения об успешном/неуспешном сохранении
+      this.msgClass = isSaved
+        ? 'bg-green-500 text-neutral-50'
+        : 'bg-rose-600 text-neutral-50'
+      this.message = isSaved
+        ? 'Сохранение успешно'
+        : 'Отмена или ошибка при сохранении'
+      setTimeout(() => {
+        this.message = 'Внесите изменения и сохраните'
+        this.msgClass = ''
+        this.open = false
+      }, 1300)
     },
     dialogFn({ contact, open, resolver }) {
       this.contact = contact
