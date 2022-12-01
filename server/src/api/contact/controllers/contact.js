@@ -23,16 +23,14 @@ module.exports = createCoreController('api::contact.contact', ({ strapi }) => ({
   create: async (ctx, next) => {
     // get user from context
     // const user = ctx.state.user
-    // get request body data from context
     const contact = JSON.parse(ctx.request.body)
-    // use the create method from Strapi enitityService
-    //const response = await super.create(ctx);
     const response = await strapi.entityService.create(
       'api::contact.contact',
       contact
     )
 
-    return JSON.stringify(response)
+    const result = await JSON.stringify(response)
+    return { data: result }
   },
   update: async (ctx, next) => {
     const id = ctx.params.id
@@ -44,6 +42,6 @@ module.exports = createCoreController('api::contact.contact', ({ strapi }) => ({
       contact
     )
 
-    return JSON.stringify(response)
+    return JSON.stringify({ data: response })
   },
 }))

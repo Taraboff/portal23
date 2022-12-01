@@ -11,7 +11,8 @@ dept
 position
 rors5
 rors10
-description'
+description
+public'
 ===========================
 strapi
 '
@@ -22,3 +23,4 @@ npm run strapi routes:list
 
 npm install -D @tailwindcss/forms
 
+массив uniqueDepts содержит все подразделения в формате pred | dept

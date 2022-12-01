@@ -44,6 +44,11 @@
     "dept": {
       "pluginOptions": {},
       "type": "string"
+    },
+    "public": {
+      "type": "boolean",
+      "default": true,
+      "required": true
     }
   }
 }

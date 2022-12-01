@@ -1,7 +1,7 @@
 <template>
   <div class="mt-10">
     <div class="w-3/4 mx-auto">
-      <h1 class="font-bold text-lg text-gray-500 text-center mb-5">
+      <h1 class="font-bold text-lg text-gray-500 text-center">
         Справочник номеров РОРС Петропавловского отделения ЮУрЖД
       </h1>
       <div class="flex flex-wrap justify-center my-4">
@@ -36,7 +36,6 @@
             <th>Ф.И.О.</th>
             <th>Должность</th>
             <th>Номер</th>
-            <th>Номер РОРС (10-знач.)</th>
             <th>Предприятие</th>
             <th>Подразделение</th>
           </tr>
@@ -45,7 +44,7 @@
           <tr
             v-for="(contact, key) in visibleContacts"
             class="border-b"
-            :class="contact.numInDept == 1 ? 'border-t-4' : ''"
+            :class="contact.numInDept == 1 ? 'border-t-2' : ''"
             :key="key"
             @click="editContactModal"
             :data-id="contact.id"
@@ -54,12 +53,15 @@
             <td class="text-left pl-4">{{ contact.attributes.name }}</td>
             <td class="text-left pl-4">{{ contact.attributes.position }}</td>
             <td class="text-center">{{ contact.attributes.rors5 }}</td>
-            <td class="text-center">{{ contact.attributes.rors10 }}</td>
-            <td class="text-left pl-4">{{ contact.attributes.pred }}</td>
+
+            <td class="text-center">{{ contact.attributes.pred }}</td>
             <td class="text-left pl-4">{{ contact.attributes.dept }}</td>
           </tr>
         </tbody>
       </table>
+    </div>
+    <div class="version flex justify-center text-xs text-indigo-700 my-14">
+      {{ `Версия приложения ${version}` }}
     </div>
   </div>
 </template>
@@ -71,9 +73,11 @@ export default {
     uniqueDepts: {},
     visibleContacts: [],
     isAdmin: true,
+    version: '0.9.0 от 30.11.2022 г.',
+    lastUpdated: '',
   }),
   methods: {
-    initUniqueDepts() {
+    setVisibleDepts() {
       let depts = [],
         mergedDept
       for (let i = 0; i < this.contacts.length; i++) {
@@ -108,7 +112,7 @@ export default {
     },
 
     makeVisibleContacts() {
-      // проход по массиву contacts и отбор элементов массива uniqueDepts которые == true
+      // проход по массиву contacts и отбор элементов, подразделение которых в uniqueDepts == true
       let numInDept = 0,
         currMergedDept
       this.visibleContacts = this.contacts.filter((contact) => {
@@ -144,6 +148,7 @@ export default {
       const currContact = this.contacts.find((contact) => contact.id == id)
 
       this.$dialog.open({
+        dialogProps: { title: 'Редактирование контакта РОРС' },
         contact: currContact,
         resolver: async (result) => {
           try {
@@ -156,8 +161,15 @@ export default {
               { method: 'PUT', body: JSON.stringify(contact) }
             )
             const res = await response.json()
-            console.log(res)
+            if (res.data) {
+              this.$sysmessage({
+                success: 'Успешное обновление данных',
+              })
+            }
           } catch (error) {
+            this.$sysmessage({
+              alert: 'Отмена сохранения или ошибка обновления данных',
+            })
             console.warn(error)
           }
         },
@@ -165,6 +177,7 @@ export default {
     },
     createContactModal() {
       this.$dialog.open({
+        dialogProps: { title: 'Создание нового контакта РОРС' },
         contact: {
           attributes: {
             name: '',
@@ -174,6 +187,7 @@ export default {
             pred: '',
             dept: '',
             description: '',
+            public: true,
           },
         },
         resolver: async (result) => {
@@ -184,27 +198,42 @@ export default {
 
             const response = await fetch(`http://localhost:1337/api/contacts`, {
               method: 'POST',
-              mode: 'no-cors',
               body: JSON.stringify(contact),
             })
-            // const res = await response.json()
-            // console.log(res)
+
+            const res = await response.json()
+            if (res.data) {
+              const newContact = JSON.parse(res.data)
+
+              this.contacts.push({ id: newContact.id, attributes: newContact })
+              this.setVisibleDepts()
+              // проход по uniqueDepts, установка всех подразделений false, а только что добавленного - true
+
+              this.makeVisibleContacts()
+              this.$sysmessage({ success: 'Новый контакт успешно создан' })
+            }
           } catch (error) {
+            this.$sysmessage({ alert: 'Не сохранено' })
             console.warn(error)
           }
-          this.fetchContacts()
         },
       })
     },
     async fetchContacts() {
       const response = await fetch(
-        'http://localhost:1337/api/contacts?sort[0]=dept&sort[1]=name'
+        'http://localhost:1337/api/contacts?sort[0]=dept&sort[1]=name&pagination[pageSize]=10000'
       )
       const result = await response.json()
-      this.contacts = result.data
-
-      this.initUniqueDepts()
-      this.makeVisibleContacts()
+      if (result.data) {
+        this.contacts = result.data
+        this.setVisibleDepts()
+        this.makeVisibleContacts()
+      } else {
+        this.$sysmessage({
+          alert: 'Ошибка получения данных. Обратитесь к администратору',
+        })
+        throw new Error('Ошибка получения данных')
+      }
     },
   },
 
@@ -218,7 +247,7 @@ export default {
   @apply font-normal py-1 px-4 mr-2 mt-2 rounded whitespace-nowrap;
 }
 .btn-white {
-  @apply text-blue-700 bg-transparent border border-blue-500;
+  @apply text-blue-700 bg-transparent border border-blue-500 hover:bg-indigo-700 hover:text-white;
 }
 .btn-pressed {
   @apply bg-indigo-600 hover:bg-indigo-700 border-transparent border text-white;
