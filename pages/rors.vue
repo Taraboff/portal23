@@ -11,7 +11,7 @@
           class="btn"
           :class="[value ? 'btn-pressed' : 'btn-white']"
           :value="key"
-          @click="toggleVisible"
+          @click="toggleDeptBtn"
         >
           {{ key }}
         </button>
@@ -19,7 +19,7 @@
           v-if="uniqueDepts"
           class="btn"
           :class="[isAllDeptsSelected() ? 'btn-pressed' : 'btn-white']"
-          @click="toggleVisibleAll"
+          @click="toggleAllDeptsBtn"
         >
           Все
         </button>
@@ -72,36 +72,55 @@ export default {
     contacts: [],
     uniqueDepts: {},
     visibleContacts: [],
-    isAdmin: true,
-    version: '0.9.0 от 30.11.2022 г.',
+    isAdmin: false,
+    version: '0.9.1 от 02.12.2022 г.',
     lastUpdated: '',
   }),
   methods: {
-    setVisibleDepts() {
-      let depts = [],
-        mergedDept
+    initUniqueDepts() {
+      let depts = []
       for (let i = 0; i < this.contacts.length; i++) {
-        let pred = this.contacts[i].attributes.pred
-        let dept = this.contacts[i].attributes.dept
-
-        mergedDept = dept ? `${pred} | ${dept}` : pred
-
-        this.contacts[i].attributes.mergedDept = mergedDept
-
-        depts.push(mergedDept)
+        depts.push(this.makeMergedDeptName(this.contacts[i]))
       }
       const filteredDepts = depts.filter(
+        // формируем массив уникальных значений
         (dept, index, array) => array.indexOf(dept) === index
       )
       filteredDepts.forEach((dept) => {
         this.uniqueDepts[dept] = false
       })
     },
-    toggleVisible(e) {
-      this.uniqueDepts[e.target.value] = !this.uniqueDepts[e.target.value]
+    makeMergedDeptName(contact) {
+      // добавляет поле mergedDept (Pred | Dept) к объекту contact
+      let pred = contact.attributes.pred
+      let dept = contact.attributes.dept
+      let mergedDept = dept ? `${pred} | ${dept}` : pred
+      contact.attributes.mergedDept = mergedDept
+      return mergedDept
+    },
+    toggleDeptBtn(e) {
+      // функция обработки нажатия кнопки выбора подразделения
+      let isAllDeptsSelected = this.isAllDeptsSelected()
+      for (let key in this.uniqueDepts) {
+        if (key === e.target.value) {
+          if (this.uniqueDepts[key]) {
+            // кнопка подразделения активна
+            if (isAllDeptsSelected) {
+              // если выбраны все подразделения
+              this.uniqueDepts[key] = true // сделать кнопку активной
+            } else {
+              this.uniqueDepts[key] = !this.uniqueDepts[key] // иначе - инвертируется выбор
+            }
+          } else {
+            this.uniqueDepts[key] = true // если кнопка неактивна - сделать активной
+          }
+        } else {
+          this.uniqueDepts[key] = false // все кнопки, кроме текущей, сделать неактивными
+        }
+      }
       this.makeVisibleContacts()
     },
-    toggleVisibleAll() {
+    toggleAllDeptsBtn() {
       const allBtnsIsPressed = this.isAllDeptsSelected()
 
       for (let key in this.uniqueDepts) {
@@ -127,7 +146,13 @@ export default {
           currMergedDept = contact.attributes.mergedDept
         }
         contact.numInDept = numInDept
-        return this.uniqueDepts[contact.attributes.mergedDept]
+
+        const isVisible = this.uniqueDepts[contact.attributes.mergedDept]
+        if (this.isAdmin) {
+          return isVisible
+        } else if (contact.attributes.public) {
+          return isVisible
+        }
       })
       return
     },
@@ -206,7 +231,7 @@ export default {
               const newContact = JSON.parse(res.data)
 
               this.contacts.push({ id: newContact.id, attributes: newContact })
-              this.setVisibleDepts()
+              this.initUniqueDepts()
               // проход по uniqueDepts, установка всех подразделений false, а только что добавленного - true
 
               this.makeVisibleContacts()
@@ -226,7 +251,7 @@ export default {
       const result = await response.json()
       if (result.data) {
         this.contacts = result.data
-        this.setVisibleDepts()
+        this.initUniqueDepts()
         this.makeVisibleContacts()
       } else {
         this.$sysmessage({
@@ -237,7 +262,7 @@ export default {
     },
   },
 
-  mounted() {
+  beforeMount() {
     this.fetchContacts()
   },
 }
@@ -245,12 +270,14 @@ export default {
 <style scoped>
 .btn {
   @apply font-normal py-1 px-4 mr-2 mt-2 rounded whitespace-nowrap;
+  box-shadow: -4px -4px 9px rgba(255, 255, 255, 0.45),
+    4px 4px 9px rgba(94, 104, 121, 0.3);
 }
 .btn-white {
-  @apply text-blue-700 bg-transparent border border-blue-500 hover:bg-indigo-700 hover:text-white;
+  @apply text-blue-700 bg-transparent border border-blue-400 hover:bg-indigo-500 hover:text-white;
 }
 .btn-pressed {
-  @apply bg-indigo-600 hover:bg-indigo-700 border-transparent border text-white;
+  @apply bg-indigo-600 hover:bg-indigo-500 border-transparent border text-white;
 }
 .btn-new {
   @apply text-green-500 bg-transparent border border-green-500 hover:bg-green-500 hover:text-white;
