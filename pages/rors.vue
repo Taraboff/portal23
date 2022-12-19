@@ -4,7 +4,11 @@
       <h1 class="font-bold text-lg text-gray-500 text-center">
         Справочник номеров РОРС Петропавловского отделения ЮУрЖД
       </h1>
-      <div class="flex flex-wrap justify-center my-4">
+      <div class="flex justify-end">
+        <div class="updated">обновлен: {{ lastUpdated }}</div>
+      </div>
+
+      <div class="flex flex-wrap justify-center mt-1 mb-4">
         <button
           v-for="(value, key) in uniqueDepts"
           :key="key"
@@ -68,19 +72,50 @@
 
 <script>
 export default {
+  auth: false,
   data: () => ({
     contacts: [],
     uniqueDepts: {},
     visibleContacts: [],
-    isAdmin: false,
-    version: '0.9.1 от 02.12.2022 г.',
     lastUpdated: '',
   }),
   methods: {
     initUniqueDepts() {
-      let depts = []
+      let depts = [],
+        lastUpdated = 0
       for (let i = 0; i < this.contacts.length; i++) {
-        depts.push(this.makeMergedDeptName(this.contacts[i]))
+        // определение даты последнего обновления
+        const date = new Date(this.contacts[i].attributes.updatedAt)
+        const epochTime = date.getTime()
+        if (epochTime > lastUpdated) {
+          lastUpdated = epochTime
+          // составление даты для отображения
+          const year = date.getFullYear()
+          const month =
+            date.getMonth() < 9
+              ? '0' + (date.getMonth() + 1)
+              : date.getMonth() + 1
+          const day = date.getDate() < 9 ? '0' + date.getDate() : date.getDate()
+          this.lastUpdated = `${day}.${month}.${year} г.`
+        }
+
+        // добавлять подразделения в зависимости от уровня доступа и значения поля public контакта
+        if (this.isAdmin) {
+          depts.push(
+            this.makeMergedDeptName({
+              pred: this.contacts[i].attributes.pred,
+              dept: this.contacts[i].attributes.dept,
+            })
+          )
+        } else if (this.contacts[i].attributes.public) {
+          // если пользователь без прав администратора - добавлять подразделения только public контактов
+          depts.push(
+            this.makeMergedDeptName({
+              pred: this.contacts[i].attributes.pred,
+              dept: this.contacts[i].attributes.dept,
+            })
+          )
+        }
       }
       const filteredDepts = depts.filter(
         // формируем массив уникальных значений
@@ -90,12 +125,10 @@ export default {
         this.uniqueDepts[dept] = false
       })
     },
-    makeMergedDeptName(contact) {
+    makeMergedDeptName({ pred, dept }) {
       // добавляет поле mergedDept (Pred | Dept) к объекту contact
-      let pred = contact.attributes.pred
-      let dept = contact.attributes.dept
+
       let mergedDept = dept ? `${pred} | ${dept}` : pred
-      contact.attributes.mergedDept = mergedDept
       return mergedDept
     },
     toggleDeptBtn(e) {
@@ -136,21 +169,27 @@ export default {
         currMergedDept
       this.visibleContacts = this.contacts.filter((contact) => {
         // ряд условий, по которым производится нумерация контактов в пределах подразделения
+        const mergedDeptName = this.makeMergedDeptName({
+          pred: contact.attributes.pred,
+          dept: contact.attributes.dept,
+        })
         if (!currMergedDept) {
-          currMergedDept = contact.attributes.mergedDept
+          currMergedDept = mergedDeptName
           numInDept = 1
-        } else if (currMergedDept == contact.attributes.mergedDept) {
+        } else if (currMergedDept == mergedDeptName) {
           numInDept++
         } else {
           numInDept = 1
-          currMergedDept = contact.attributes.mergedDept
+          currMergedDept = mergedDeptName
         }
         contact.numInDept = numInDept
 
-        const isVisible = this.uniqueDepts[contact.attributes.mergedDept]
+        const isVisible = this.uniqueDepts[mergedDeptName]
         if (this.isAdmin) {
-          return isVisible
+          // при наличии прав администратора
+          return isVisible // выводить все контакты
         } else if (contact.attributes.public) {
+          // иначе - выводить только контакты public = true
           return isVisible
         }
       })
@@ -169,6 +208,7 @@ export default {
       return true
     },
     editContactModal(e) {
+      if (this.$auth.user.role !== 'admin') return
       const id = e.target.closest('tr').dataset.id
       const currContact = this.contacts.find((contact) => contact.id == id)
 
@@ -186,7 +226,18 @@ export default {
               { method: 'PUT', body: JSON.stringify(contact) }
             )
             const res = await response.json()
-            if (res.data) {
+            const updatedContact = res.data
+            if (updatedContact) {
+              this.lastUpdated = updatedContact.updatedAt
+              await this.fetchContacts()
+              this.initUniqueDepts()
+              this.updateCurrentDept(
+                this.makeMergedDeptName({
+                  pred: updatedContact.pred,
+                  dept: updatedContact.dept,
+                })
+              )
+              this.makeVisibleContacts()
               this.$sysmessage({
                 success: 'Успешное обновление данных',
               })
@@ -228,12 +279,17 @@ export default {
 
             const res = await response.json()
             if (res.data) {
-              const newContact = JSON.parse(res.data)
+              const createdContact = JSON.parse(res.data)
 
-              this.contacts.push({ id: newContact.id, attributes: newContact })
+              this.lastUpdated = createdContact.updatedAt
+              await this.fetchContacts()
               this.initUniqueDepts()
-              // проход по uniqueDepts, установка всех подразделений false, а только что добавленного - true
-
+              this.updateCurrentDept(
+                this.makeMergedDeptName({
+                  pred: createdContact.pred,
+                  dept: createdContact.dept,
+                })
+              )
               this.makeVisibleContacts()
               this.$sysmessage({ success: 'Новый контакт успешно создан' })
             }
@@ -244,6 +300,16 @@ export default {
         },
       })
     },
+    updateCurrentDept(dept) {
+      // помечает для отображения подразделение dept
+      for (let key in this.uniqueDepts) {
+        if (key === dept) {
+          this.uniqueDepts[key] = true
+        } else {
+          this.uniqueDepts[key] = false
+        }
+      }
+    },
     async fetchContacts() {
       const response = await fetch(
         'http://localhost:1337/api/contacts?sort[0]=dept&sort[1]=name&pagination[pageSize]=10000'
@@ -251,8 +317,7 @@ export default {
       const result = await response.json()
       if (result.data) {
         this.contacts = result.data
-        this.initUniqueDepts()
-        this.makeVisibleContacts()
+        return
       } else {
         this.$sysmessage({
           alert: 'Ошибка получения данных. Обратитесь к администратору',
@@ -261,17 +326,32 @@ export default {
       }
     },
   },
-
-  beforeMount() {
-    this.fetchContacts()
+  computed: {
+    version() {
+      return this.$config.appVersion
+    },
+    isAdmin() {
+      if (this.$auth.user) {
+        return (
+          this.$auth.user.role === 'admin' || this.$auth.user.role === 'editor'
+        )
+      } else {
+        return false
+      }
+    },
+  },
+  async mounted() {
+    await this.fetchContacts()
+    this.initUniqueDepts()
+    this.makeVisibleContacts()
   },
 }
 </script>
 <style scoped>
 .btn {
   @apply font-normal py-1 px-4 mr-2 mt-2 rounded whitespace-nowrap;
-  box-shadow: -4px -4px 9px rgba(255, 255, 255, 0.45),
-    4px 4px 9px rgba(94, 104, 121, 0.3);
+  box-shadow: -3px -3px 9px rgba(255, 255, 255, 0.45),
+    3px 3px 9px rgba(94, 104, 121, 0.3);
 }
 .btn-white {
   @apply text-blue-700 bg-transparent border border-blue-400 hover:bg-indigo-500 hover:text-white;
@@ -284,5 +364,10 @@ export default {
 }
 td {
   cursor: pointer;
+}
+.updated {
+  @apply px-3 pb-[2px]  border border-red-300 text-red-400 text-xs rounded-lg;
+  box-shadow: -3px -3px 9px rgba(255, 255, 255, 0.45),
+    3px 3px 9px rgba(94, 104, 121, 0.3);
 }
 </style>
