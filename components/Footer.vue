@@ -1,7 +1,7 @@
 <template>
   <div class="sticky top-[100vh]">
     <div class="pb-6 mx-8">
-      <ul>
+      <ul v-if="false">
         <li class="text-xs">Разработка и поддержка сайта</li>
       </ul>
     </div>

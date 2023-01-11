@@ -71,6 +71,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 export default {
   auth: false,
   data: () => ({
@@ -78,8 +79,11 @@ export default {
     uniqueDepts: {},
     visibleContacts: [],
     lastUpdated: '',
+    isAdmin: false,
   }),
   methods: {
+    ...mapActions(['getUserRole']),
+
     initUniqueDepts() {
       let depts = [],
         lastUpdated = 0
@@ -325,22 +329,31 @@ export default {
         throw new Error('Ошибка получения данных')
       }
     },
+    setAdmin() {
+      if (this.$auth.user) {
+        if (
+          this.$auth.user.role === 'admin' ||
+          this.$auth.user.role === 'editor'
+        ) {
+          this.isAdmin = true
+        } else {
+          this.isAdmin = false
+        }
+      } else {
+        this.isAdmin = false
+      }
+    },
   },
   computed: {
     version() {
       return this.$config.appVersion
     },
-    isAdmin() {
-      if (this.$auth.user) {
-        return (
-          this.$auth.user.role === 'admin' || this.$auth.user.role === 'editor'
-        )
-      } else {
-        return false
-      }
-    },
   },
   async mounted() {
+    if (this.$auth.user) {
+      await this.getUserRole()
+      this.setAdmin()
+    }
     await this.fetchContacts()
     this.initUniqueDepts()
     this.makeVisibleContacts()

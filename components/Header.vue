@@ -13,7 +13,7 @@
             exact
             no-prefetch
             class="px-4"
-            >Новости</nuxt-link
+            >Главная</nuxt-link
           >
         </li>
         <li>

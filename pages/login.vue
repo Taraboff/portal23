@@ -4,7 +4,7 @@
       <div class="columns">
         <div class="column">
           <div class="flex justify-center mb-6">
-            <h2 class="font-medium">Вход для зарегистрирванных</h2>
+            <h2 class="font-medium">Вход для зарегистрированных</h2>
           </div>
 
           <Notification v-if="error" type="danger" :message="error" />
@@ -53,7 +53,7 @@
 
 <script>
 import Notification from '~/components/Notification'
-import { mapMutations } from 'vuex'
+import { mapActions } from 'vuex'
 export default {
   components: {
     Notification,
@@ -78,15 +78,12 @@ export default {
         })
         this.$router.push('/')
 
-        const resp = await this.$axios('users/me?populate=role') // перенести в actions
-        const userRole = resp.data.role.type
-        this.setUserRole(userRole)
-        // передать в Store -> isAdmin
+        this.getUserRole()
       } catch (e) {
         this.error = e.response.data.error.message
       }
     },
-    ...mapMutations(['setUserRole']),
+    ...mapActions(['getUserRole']),
   },
 }
 </script>

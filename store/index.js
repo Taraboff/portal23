@@ -7,7 +7,11 @@ export const mutations = {
 }
 
 export const actions = {
-  // запрос для получения всех контактов
+  async getUserRole({ commit, state }) {
+    const resp = await this.$axios('users/me?populate=role')
+    const userRole = resp.data.role.type
+    commit('setUserRole', userRole)
+  },
 }
 
 export const getters = {
