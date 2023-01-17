@@ -74,7 +74,7 @@ export default {
   async mounted() {
     if (this.$auth.user) {
       // если токен авторизации действителен
-      const response = await this.$axios('users/me?populate=role')
+      const response = await this.$axios('/api/users/me?populate=role')
       const userRole = response.data.role.type
       this.setUserRole(userRole)
     }

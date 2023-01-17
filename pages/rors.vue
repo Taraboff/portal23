@@ -315,10 +315,10 @@ export default {
       }
     },
     async fetchContacts() {
-      const response = await fetch(
-        'http://localhost:1337/api/contacts?sort[0]=dept&sort[1]=name&pagination[pageSize]=10000'
+      const result = await this.$axios.$get(
+        'api/contacts?sort[0]=dept&sort[1]=name&pagination[pageSize]=10000'
       )
-      const result = await response.json()
+      // const result = await response.json()
       if (result.data) {
         this.contacts = result.data
         return

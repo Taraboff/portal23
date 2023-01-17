@@ -34,10 +34,20 @@ export default {
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
     '@nuxtjs/auth-next',
+    '@nuxtjs/proxy',
   ],
+  proxy: {
+    '/api': process.env.API_URL,
+    // target: 'http://127.0.0.1:1337/',
+    // changeOrigin: true,
+    // pathRewrite: {
+    //   '^/api': '/api',
+    // },
+    // },
+  },
+
   publicRuntimeConfig: {
-    apiURL: 'http://localhost:1337',
-    appVersion: '0.9.3.auth от 19.12.2022',
+    appVersion: '0.9.5.prx от 17.01.2023',
   },
   privateRuntimeConfig: {
     apiSecret: process.env.API_SECRET,
@@ -45,7 +55,10 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: process.env.STRAPI_URL || 'http://localhost:1337/api',
+    // baseURL: process.env.API_URL, // || 'http://localhost:1337/api',
+    proxy: true,
+    // prefix: '/api/',
+    // credentials: true,
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
@@ -65,11 +78,11 @@ export default {
         },
         endpoints: {
           login: {
-            url: 'auth/local',
+            url: 'api/auth/local',
             method: 'post',
           },
           user: {
-            url: 'users/me',
+            url: 'api/users/me',
             method: 'get',
           },
           logout: false,

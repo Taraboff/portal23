@@ -8,8 +8,8 @@ export const mutations = {
 
 export const actions = {
   async getUserRole({ commit, state }) {
-    const resp = await this.$axios('users/me?populate=role')
-    const userRole = resp.data.role.type
+    const response = await this.$axios.$get('api/users/me?populate=role')
+    const userRole = response.role.type
     commit('setUserRole', userRole)
   },
 }
