@@ -47,7 +47,7 @@ export default {
   },
 
   publicRuntimeConfig: {
-    appVersion: '0.9.5.prx от 17.01.2023',
+    appVersion: '0.9.6 от 20.01.2023',
   },
   privateRuntimeConfig: {
     apiSecret: process.env.API_SECRET,

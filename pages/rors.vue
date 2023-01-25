@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-10">
+  <div>
     <div class="w-3/4 mx-auto">
       <h1 class="font-bold text-lg text-gray-500 text-center">
         Справочник номеров РОРС Петропавловского отделения ЮУрЖД
@@ -63,9 +63,6 @@
           </tr>
         </tbody>
       </table>
-    </div>
-    <div class="version flex justify-center text-xs text-indigo-700 my-14">
-      {{ `Версия приложения ${version}` }}
     </div>
   </div>
 </template>
@@ -225,12 +222,11 @@ export default {
             const contact = {}
             contact.data = fields.attributes
 
-            const response = await fetch(
-              `http://localhost:1337/api/contacts/${fields.id}`,
-              { method: 'PUT', body: JSON.stringify(contact) }
+            const response = await this.$axios.$put(
+              `api/contacts/${fields.id}`,
+              contact
             )
-            const res = await response.json()
-            const updatedContact = res.data
+            const updatedContact = response.data
             if (updatedContact) {
               this.lastUpdated = updatedContact.updatedAt
               await this.fetchContacts()
@@ -276,14 +272,10 @@ export default {
             const contact = {}
             contact.data = fields.attributes
 
-            const response = await fetch(`http://localhost:1337/api/contacts`, {
-              method: 'POST',
-              body: JSON.stringify(contact),
-            })
+            const res = await this.$axios.$post(`api/contacts`, contact)
 
-            const res = await response.json()
             if (res.data) {
-              const createdContact = JSON.parse(res.data)
+              const createdContact = res.data
 
               this.lastUpdated = createdContact.updatedAt
               await this.fetchContacts()
@@ -318,7 +310,6 @@ export default {
       const result = await this.$axios.$get(
         'api/contacts?sort[0]=dept&sort[1]=name&pagination[pageSize]=10000'
       )
-      // const result = await response.json()
       if (result.data) {
         this.contacts = result.data
         return
@@ -342,11 +333,6 @@ export default {
       } else {
         this.isAdmin = false
       }
-    },
-  },
-  computed: {
-    version() {
-      return this.$config.appVersion
     },
   },
   async mounted() {

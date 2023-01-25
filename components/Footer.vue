@@ -1,8 +1,8 @@
 <template>
   <div class="sticky top-[100vh]">
-    <div class="pb-6 mx-8">
-      <ul v-if="false">
-        <li class="text-xs">Разработка и поддержка сайта</li>
+    <div class="flex justify-center pb-6 pt-20 mx-8">
+      <ul v-if="true">
+        <li class="text-xs">Версия приложения: {{ version }}</li>
       </ul>
     </div>
   </div>
@@ -13,6 +13,9 @@ export default {
   data: () => ({}),
   computed: {
     ...mapGetters(['loggedInUser', 'isAuthenticated']),
+    version() {
+      return this.$config.appVersion
+    },
   },
   methods: {
     async userLogout() {

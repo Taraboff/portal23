@@ -1,7 +1,9 @@
 <template>
   <transition name="fade">
     <div v-show="open">
-      <div class="modal-backdrop"></div>
+      <div
+        class="modal-backdrop fixed w-screen h-screen opacity-75 bg-black"
+      ></div>
 
       <div class="modal">
         <div class="px-4 py-3">
@@ -231,13 +233,6 @@ export default {
 }
 </script>
 <style scoped>
-.modal-backdrop {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background-color: black;
-  opacity: 0.75;
-}
 .modal {
   width: 700px;
   position: absolute;

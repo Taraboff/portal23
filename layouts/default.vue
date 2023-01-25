@@ -1,14 +1,10 @@
 <template>
   <div>
-    <div class="min-h-screen">
-      <ContactModal />
-      <SysMessage />
+    <ContactModal />
+    <div class="flex min-h-screen flex-col container mx-auto">
       <Header />
-      <div class="lg:container mx-auto">
-        <div>
-          <nuxt />
-        </div>
-      </div>
+      <SysMessage />
+      <nuxt />
       <Footer />
     </div>
   </div>

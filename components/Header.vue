@@ -16,6 +16,40 @@
             >Главная</nuxt-link
           >
         </li>
+
+        <li>
+          <nuxt-link
+            tag="a"
+            to="/docs"
+            active-class="font-bold text-slate-500"
+            exact
+            no-prefetch
+            class="px-4"
+            >Документация</nuxt-link
+          >
+        </li>
+        <li>
+          <nuxt-link
+            tag="a"
+            to="/profkom"
+            active-class="font-bold text-slate-500"
+            exact
+            no-prefetch
+            class="px-4"
+            >Профком</nuxt-link
+          >
+        </li>
+        <li>
+          <nuxt-link
+            tag="a"
+            to="/about"
+            active-class="font-bold text-slate-500"
+            exact
+            no-prefetch
+            class="px-4"
+            >О дистанции</nuxt-link
+          >
+        </li>
         <li>
           <nuxt-link
             tag="a"

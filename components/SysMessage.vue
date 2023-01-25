@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="h-[30px]">
     <transition appear name="fade">
       <div v-if="open" class="status" :class="[style]">{{ message }}</div>
     </transition>
@@ -32,7 +32,7 @@ export default {
 </script>
 <style scoped>
 .status {
-  @apply fixed top-0 right-0 px-[19px] py-[2px] rounded text-white;
+  @apply px-[19px] py-[2px] rounded text-white;
 }
 .alert {
   @apply bg-red-500;
@@ -42,7 +42,7 @@ export default {
 }
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 5.5s ease;
+  transition: opacity 4.5s ease;
 }
 
 .fade-enter-from,
