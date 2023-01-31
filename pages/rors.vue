@@ -20,7 +20,7 @@
           {{ key }}
         </button>
         <button
-          v-if="uniqueDepts"
+          v-if="uniqueDepts && isAdmin"
           class="btn"
           :class="[isAllDeptsSelected() ? 'btn-pressed' : 'btn-white']"
           @click="toggleAllDeptsBtn"
@@ -42,6 +42,7 @@
             <th>Номер</th>
             <th>Предприятие</th>
             <th>Подразделение</th>
+            <th v-if="isAdmin">Примечание</th>
           </tr>
         </thead>
         <tbody>
@@ -56,10 +57,15 @@
             <td class="text-center">{{ contact.numInDept }}</td>
             <td class="text-left pl-4">{{ contact.attributes.name }}</td>
             <td class="text-left pl-4">{{ contact.attributes.position }}</td>
-            <td class="text-center">{{ contact.attributes.rors5 }}</td>
+            <td class="text-center text-sky-800 font-medium">
+              {{ contact.attributes.rors5 }}
+            </td>
 
             <td class="text-center">{{ contact.attributes.pred }}</td>
             <td class="text-left pl-4">{{ contact.attributes.dept }}</td>
+            <td v-if="isAdmin" class="text-left pl-4 pr-4">
+              {{ contact.attributes.description }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -68,7 +74,7 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 export default {
   auth: false,
   data: () => ({
@@ -76,11 +82,8 @@ export default {
     uniqueDepts: {},
     visibleContacts: [],
     lastUpdated: '',
-    isAdmin: false,
   }),
   methods: {
-    ...mapActions(['getUserRole']),
-
     initUniqueDepts() {
       let depts = [],
         lastUpdated = 0
@@ -209,7 +212,7 @@ export default {
       return true
     },
     editContactModal(e) {
-      if (this.$auth.user.role !== 'admin') return
+      if (!this.isAdmin) return
       const id = e.target.closest('tr').dataset.id
       const currContact = this.contacts.find((contact) => contact.id == id)
 
@@ -221,6 +224,7 @@ export default {
             const fields = await result // в fields возвращается объект данных из полей формы
             const contact = {}
             contact.data = fields.attributes
+            contact.data.updated_by_id = this.$auth.user.id // добавление поля id текущего пользователя
 
             const response = await this.$axios.$put(
               `api/contacts/${fields.id}`,
@@ -264,6 +268,7 @@ export default {
             dept: '',
             description: '',
             public: true,
+            created_by_id: this.$auth.user.id,
           },
         },
         resolver: async (result) => {
@@ -320,29 +325,24 @@ export default {
         throw new Error('Ошибка получения данных')
       }
     },
-    setAdmin() {
-      if (this.$auth.user) {
-        if (
-          this.$auth.user.role === 'admin' ||
-          this.$auth.user.role === 'editor'
-        ) {
-          this.isAdmin = true
-        } else {
-          this.isAdmin = false
-        }
-      } else {
-        this.isAdmin = false
-      }
-    },
   },
   async mounted() {
-    if (this.$auth.user) {
-      await this.getUserRole()
-      this.setAdmin()
-    }
     await this.fetchContacts()
     this.initUniqueDepts()
     this.makeVisibleContacts()
+  },
+  computed: {
+    ...mapGetters(['loggedInUser', 'getUserRole']),
+
+    isAdmin() {
+      // установка флага администратора справочника РОРС
+
+      if (this.loggedInUser) {
+        if (this.getUserRole === 'admin' || this.getUserRole === 'editor') {
+          return true
+        }
+      } else return false
+    },
   },
 }
 </script>

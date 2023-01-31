@@ -98,6 +98,7 @@ export default {
 
     async userLogout() {
       await this.$auth.logout()
+      this.setUserRole('public') // установка роли незарегистрированного пользователя
       this.$router.push('/')
     },
   },
@@ -106,8 +107,8 @@ export default {
     ...mapGetters(['loggedInUser', 'isAuthenticated']),
   },
   async mounted() {
-    if (this.$auth.user) {
-      // если токен авторизации действителен
+    if (this.isAuthenticated) {
+      // если токен авторизации действителен - запрос в БД роли пользователя и сохранение в Vuex store
       const response = await this.$axios('/api/users/me?populate=role')
       const userRole = response.data.role.type
       this.setUserRole(userRole)

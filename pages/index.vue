@@ -8,7 +8,7 @@
         <p>Новости Петропавловской дистанции сигнализации и связи</p>
       </main>
       <aside class="aside col-span-3 border border-yellow-700">
-        Aside Right
+        <div></div>
       </aside>
     </div>
   </div>

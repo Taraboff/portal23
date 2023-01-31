@@ -1,13 +1,15 @@
-export const state = () => ({})
+export const state = () => ({
+  userRole: 'public',
+})
 
 export const mutations = {
   setUserRole(state, role) {
-    state.auth.user.role = role
+    state.userRole = role
   },
 }
 
 export const actions = {
-  async getUserRole({ commit, state }) {
+  async fetchAndSaveUserRole({ commit, state }) {
     const response = await this.$axios.$get('api/users/me?populate=role')
     const userRole = response.role.type
     commit('setUserRole', userRole)
@@ -21,5 +23,9 @@ export const getters = {
 
   loggedInUser(state) {
     return state.auth.user
+  },
+
+  getUserRole(state) {
+    return state.userRole
   },
 }

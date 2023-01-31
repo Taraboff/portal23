@@ -67,6 +67,8 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['fetchAndSaveUserRole']),
+
     async login() {
       this.error = null
       try {
@@ -77,13 +79,12 @@ export default {
           },
         })
         this.$router.push('/')
-
-        this.getUserRole()
+        // если токен авторизации действителен - запрос в БД роли пользователя и сохранение в Vuex store
+        this.fetchAndSaveUserRole()
       } catch (e) {
         this.error = e.response.data.error.message
       }
     },
-    ...mapActions(['getUserRole']),
   },
 }
 </script>
